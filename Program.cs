@@ -32,6 +32,88 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
+
+// Endpoints for Orders
+app.MapGet("/api/orders", async (WangazonDbContext db) =>
+{
+    var orders = await db.Orders.ToListAsync();
+
+    if (orders == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(orders);
+});
+
+
+
+
+// Endpoints for Employee
+app.MapGet("/api/employees", async (WangazonDbContext db) =>
+{
+    var employees = await db.Employees.ToListAsync();
+
+    if (employees == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(employees);
+});
+
+
+
+// Endpoints for Menu Items
+app.MapGet("/api/menuitems", async (WangazonDbContext db) =>
+{
+    var menuItems = await db.MenuItems.ToListAsync();
+
+    if (menuItems == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(menuItems);
+});
+
+
+
+
+// Endpoints for Order Types
+app.MapGet("/api/ordertypes", async (WangazonDbContext db) =>
+{
+    var orderTypes = await db.OrderTypes.ToListAsync();
+
+    if (orderTypes == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(orderTypes);
+});
+
+
+
+
+
+// Endpoints for Payment Types
+app.MapGet("/api/payment", async (WangazonDbContext db) =>
+{
+    var paymentTypes = await db.PaymentTypes.ToListAsync();
+
+    if (paymentTypes == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(paymentTypes);
+});
+
+
+
+
+// Total revenue for every order
 app.MapGet("/api/revenue", async (WangazonDbContext db) =>
 {
     var revenueDTOs = await db.Revenues
@@ -61,7 +143,7 @@ app.MapGet("/api/revenue", async (WangazonDbContext db) =>
             Tip = r.TotalTips,
             TotalOrderAmountWithTip = totalOrderAmountWithTip,
             PaymentType = paymentType,
-            OrderType = orderTypes,
+            OrderTypes = orderTypes,
             OrderClosed = orderClosed,
             WalkInCount = walkInCount,
             CallInCount = callInCount,
@@ -72,6 +154,51 @@ app.MapGet("/api/revenue", async (WangazonDbContext db) =>
 
     return Results.Ok(revenueDTOList);
 });
+
+// revenue for a single employee
+app.MapGet("/api/revenue/{employeeId}", async (WangazonDbContext db, int employeeId) =>
+{
+    var revenueDTOs = await db.Revenues
+        .Include(r => r.Orders)
+        .ThenInclude(o => o.PaymentTypes)
+        .Include(r => r.Orders)
+        .ThenInclude(o => o.Type)
+        .Include(r => r.Orders)
+        .ThenInclude(o => o.MenuItems)
+        .Where(r => r.EmployeeId == employeeId)
+        .Where(r => r.Orders.Any(o => o.OrderClosed != null && o.OrderClosed.HasValue))
+        .ToListAsync();
+
+    var revenueDTOList = revenueDTOs.Select(r =>
+    {
+        var totalOrderAmountWithTip = r.Orders.Sum(o => o.CalculateTotalPrice());
+        var paymentType = string.Join(", ", r.Orders.SelectMany(o => o.PaymentTypes.Select(pt => pt.Type)));
+        var orderTypes = string.Join(", ", r.Orders.SelectMany(o => o.Type.Select(ot => ot.Type)));
+        var orderClosed = r.Orders.Max(o => o.OrderClosed.Value);
+        var walkInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Walk In"));
+        var callInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Call In"));
+        var cashCount = r.Orders.Count(o => o.PaymentTypes.Any(pt => pt.Type == "Cash"));
+        var creditCardCount = r.Orders.Count(o => o.PaymentTypes.Any(pt => pt.Type == "Credit Card"));
+
+
+        return new RevenueDTO
+        {
+            Tip = r.TotalTips,
+            TotalOrderAmountWithTip = totalOrderAmountWithTip,
+            PaymentType = paymentType,
+            OrderTypes = orderTypes,
+            OrderClosed = orderClosed,
+            WalkInCount = walkInCount,
+            CallInCount = callInCount,
+            CashCount = cashCount,
+            CreditCardCount = creditCardCount,
+        };
+    }).ToList();
+
+    return Results.Ok(revenueDTOList);
+});
+
+
 
 
 
