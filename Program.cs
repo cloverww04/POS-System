@@ -59,6 +59,32 @@ app.MapGet("/api/orders", async (WangazonDbContext db) =>
 });
 
 
+app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
+{
+    var orders = await db.Orders
+    .Include(o => o.Type)
+    .Where(o => o.Id == id)
+    .ToListAsync();
+
+    var ordersDTO = orders.Select(order => new OrderDTO
+    {
+        OrderName = order.CustomerFirstName + " " + order.CustomerLastName,
+        OrderStatus = order.OrderClosed.HasValue ? "Closed" : "Open",
+        PhoneNumber = order.CustomerPhone,
+        EmailAddress = order.CustomerEmail,
+        OrderType = order.Type?.FirstOrDefault()?.Type,
+
+    }).ToList();
+
+    if (orders == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(ordersDTO);
+});
+
+
 
 
 // Endpoints for Employee
