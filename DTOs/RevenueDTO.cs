@@ -7,5 +7,10 @@
         public string? PaymentType { get; set; }
         public string? OrderType { get; set; }
         public DateTime OrderClosed { get; set; }
+        public int WalkInCount { get; set; }
+        public int CallInCount { get; set; }
+        public int CashCount { get; set; }
+        public int CreditCardCount { get; set; }
+
     }
 }

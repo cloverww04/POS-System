@@ -52,23 +52,8 @@ app.MapGet("/api/revenue", async (WangazonDbContext db) =>
         var orderClosed = r.Orders.Max(o => o.OrderClosed.Value);
         var walkInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Walk In"));
         var callInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Call In"));
-
-        string orderType = null;
-        if (callInCount > 0)
-        {
-            if (walkInCount > 0)
-            {
-                orderType = $"Call In = {callInCount}, Walk In = {walkInCount}";
-            }
-            else
-            {
-                orderType = $"Call In = {callInCount}";
-            }
-        }
-        else if (walkInCount > 0)
-        {
-            orderType = $"Walk In = {walkInCount}";
-        }
+        var cashCount = r.Orders.Count(o => o.PaymentTypes.Any(pt => pt.Type == "Cash"));
+        var creditCardCount = r.Orders.Count(o => o.PaymentTypes.Any(pt => pt.Type == "Credit Card"));
 
 
         return new RevenueDTO
@@ -76,8 +61,12 @@ app.MapGet("/api/revenue", async (WangazonDbContext db) =>
             Tip = r.TotalTips,
             TotalOrderAmountWithTip = totalOrderAmountWithTip,
             PaymentType = paymentType,
-            OrderType = orderType,
+            OrderType = orderTypes,
             OrderClosed = orderClosed,
+            WalkInCount = walkInCount,
+            CallInCount = callInCount,
+            CashCount = cashCount,
+            CreditCardCount = creditCardCount,
         };
     }).ToList();
 
