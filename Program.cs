@@ -36,14 +36,26 @@ app.UseHttpsRedirection();
 // Endpoints for Orders
 app.MapGet("/api/orders", async (WangazonDbContext db) =>
 {
-    var orders = await db.Orders.ToListAsync();
+    var orders = await db.Orders
+    .Include(o => o.Type)
+    .ToListAsync();
+
+    var ordersDTO = orders.Select(order => new OrderDTO
+    {
+        OrderName = order.CustomerFirstName + " " + order.CustomerLastName,
+        OrderStatus = order.OrderClosed.HasValue ? "Closed" : "Open",
+        PhoneNumber = order.CustomerPhone,
+        EmailAddress = order.CustomerEmail,
+        OrderType = order.Type?.FirstOrDefault()?.Type,
+
+    }).ToList();
 
     if (orders == null)
     {
         return Results.NotFound();
     }
 
-    return Results.Ok(orders);
+    return Results.Ok(ordersDTO);
 });
 
 
