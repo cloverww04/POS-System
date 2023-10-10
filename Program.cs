@@ -66,7 +66,7 @@ app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
 {
     var order = await db.Orders
         .Include(o => o.Type)
-        .Include(o => o.MenuItems) // Include the related menu items
+        .Include(o => o.MenuItems)
         .Where(o => o.Id == id)
         .FirstOrDefaultAsync();
 
