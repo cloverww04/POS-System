@@ -84,9 +84,6 @@ namespace wangazon.Migrations
                     b.Property<string>("LastName")
                         .HasColumnType("text");
 
-                    b.Property<string>("Password")
-                        .HasColumnType("text");
-
                     b.Property<string>("Uid")
                         .HasColumnType("text");
 
@@ -100,8 +97,7 @@ namespace wangazon.Migrations
                             Id = 1,
                             Email = "N.clover@email.com",
                             FirstName = "Nathan",
-                            LastName = "Clover",
-                            Password = "P@ssw0rd"
+                            LastName = "Clover"
                         });
                 });
 
@@ -208,8 +204,8 @@ namespace wangazon.Migrations
                             CustomerLastName = "Doe",
                             CustomerPhone = "555-123-4567",
                             EmployeeId = 1,
-                            OrderClosed = new DateTime(2023, 10, 5, 22, 18, 15, 539, DateTimeKind.Local).AddTicks(1995),
-                            OrderPlaced = new DateTime(2023, 10, 5, 20, 48, 15, 539, DateTimeKind.Local).AddTicks(1992),
+                            OrderClosed = new DateTime(2023, 10, 9, 23, 35, 0, 163, DateTimeKind.Local).AddTicks(9925),
+                            OrderPlaced = new DateTime(2023, 10, 9, 22, 5, 0, 163, DateTimeKind.Local).AddTicks(9922),
                             Review = "Great service!",
                             Tip = 2.00m
                         },
@@ -221,8 +217,8 @@ namespace wangazon.Migrations
                             CustomerLastName = "Dole",
                             CustomerPhone = "555-231-1267",
                             EmployeeId = 1,
-                            OrderClosed = new DateTime(2023, 10, 5, 22, 18, 15, 539, DateTimeKind.Local).AddTicks(2003),
-                            OrderPlaced = new DateTime(2023, 10, 5, 20, 48, 15, 539, DateTimeKind.Local).AddTicks(2002),
+                            OrderClosed = new DateTime(2023, 10, 9, 23, 35, 0, 163, DateTimeKind.Local).AddTicks(9933),
+                            OrderPlaced = new DateTime(2023, 10, 9, 22, 5, 0, 163, DateTimeKind.Local).AddTicks(9932),
                             Review = "It was ok",
                             Tip = 5.00m
                         });

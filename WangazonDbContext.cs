@@ -18,7 +18,7 @@ namespace wangazon
 
             modelBuilder.Entity<Employee>().HasData(new Employee[]
             {
-                new Employee { Id = 1, FirstName = "Nathan", LastName = "Clover", Email = "N.clover@email.com", Password = "P@ssw0rd"}
+                new Employee { Id = 1, FirstName = "Nathan", LastName = "Clover", Email = "N.clover@email.com"}
             });
 
             modelBuilder.Entity<OrderType>().HasData(new OrderType[]

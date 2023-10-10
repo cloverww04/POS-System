@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace wangazon.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,7 +23,6 @@ namespace wangazon.Migrations
                     FirstName = table.Column<string>(type: "text", nullable: true),
                     LastName = table.Column<string>(type: "text", nullable: true),
                     Email = table.Column<string>(type: "text", nullable: true),
-                    Password = table.Column<string>(type: "text", nullable: true),
                     Uid = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -199,8 +198,8 @@ namespace wangazon.Migrations
 
             migrationBuilder.InsertData(
                 table: "Employees",
-                columns: new[] { "Id", "Email", "FirstName", "LastName", "Password", "Uid" },
-                values: new object[] { 1, "N.clover@email.com", "Nathan", "Clover", "P@ssw0rd", null });
+                columns: new[] { "Id", "Email", "FirstName", "LastName", "Uid" },
+                values: new object[] { 1, "N.clover@email.com", "Nathan", "Clover", null });
 
             migrationBuilder.InsertData(
                 table: "MenuItems",
@@ -235,8 +234,8 @@ namespace wangazon.Migrations
                 columns: new[] { "Id", "CustomerEmail", "CustomerFirstName", "CustomerLastName", "CustomerPhone", "EmployeeId", "OrderClosed", "OrderPlaced", "RevenueId", "Review", "Tip" },
                 values: new object[,]
                 {
-                    { 1, "john.doe@example.com", "John", "Doe", "555-123-4567", 1, new DateTime(2023, 10, 5, 22, 18, 15, 539, DateTimeKind.Local).AddTicks(1995), new DateTime(2023, 10, 5, 20, 48, 15, 539, DateTimeKind.Local).AddTicks(1992), null, "Great service!", 2.00m },
-                    { 2, "bob.dole@example.com", "Bob", "Dole", "555-231-1267", 1, new DateTime(2023, 10, 5, 22, 18, 15, 539, DateTimeKind.Local).AddTicks(2003), new DateTime(2023, 10, 5, 20, 48, 15, 539, DateTimeKind.Local).AddTicks(2002), null, "It was ok", 5.00m }
+                    { 1, "john.doe@example.com", "John", "Doe", "555-123-4567", 1, new DateTime(2023, 10, 9, 23, 35, 0, 163, DateTimeKind.Local).AddTicks(9925), new DateTime(2023, 10, 9, 22, 5, 0, 163, DateTimeKind.Local).AddTicks(9922), null, "Great service!", 2.00m },
+                    { 2, "bob.dole@example.com", "Bob", "Dole", "555-231-1267", 1, new DateTime(2023, 10, 9, 23, 35, 0, 163, DateTimeKind.Local).AddTicks(9933), new DateTime(2023, 10, 9, 22, 5, 0, 163, DateTimeKind.Local).AddTicks(9932), null, "It was ok", 5.00m }
                 });
 
             migrationBuilder.CreateIndex(

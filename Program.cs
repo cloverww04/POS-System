@@ -64,28 +64,37 @@ app.MapGet("/api/orders", async (WangazonDbContext db) =>
 
 app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
 {
-    var orders = await db.Orders
-    .Include(o => o.Type)
-    .Where(o => o.Id == id)
-    .ToListAsync();
+    var order = await db.Orders
+        .Include(o => o.Type)
+        .Include(o => o.MenuItems) // Include the related menu items
+        .Where(o => o.Id == id)
+        .FirstOrDefaultAsync();
 
-    var ordersDTO = orders.Select(order => new OrderDTO
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+
+    decimal totalOrderAmount = order.MenuItems.Sum(item => item.Price);
+
+    var orderDTO = new OrderDTO
     {
         OrderName = order.CustomerFirstName + " " + order.CustomerLastName,
         OrderStatus = order.OrderClosed.HasValue ? "Closed" : "Open",
         PhoneNumber = order.CustomerPhone,
         EmailAddress = order.CustomerEmail,
         OrderType = order.Type?.FirstOrDefault()?.Type,
+        MenuItems = order.MenuItems.Select(item => new MenuItemDTO
+        {
+            ItemName = item.Name,
+            Price = item.Price
+        }).ToList(),
+        TotalOrderAmount = totalOrderAmount
+    };
 
-    }).ToList();
-
-    if (orders == null)
-    {
-        return Results.NotFound();
-    }
-
-    return Results.Ok(ordersDTO);
+    return Results.Ok(orderDTO);
 });
+
 
 app.MapPost("/api/orders", async (WangazonDbContext db, CreateOrderDTO orderDTO) =>
 {
@@ -101,6 +110,7 @@ app.MapPost("/api/orders", async (WangazonDbContext db, CreateOrderDTO orderDTO)
 
     try
     {
+
         var order = new Order
         {
             EmployeeId = orderDTO.EmployeeId,
@@ -113,7 +123,9 @@ app.MapPost("/api/orders", async (WangazonDbContext db, CreateOrderDTO orderDTO)
             CustomerEmail = orderDTO.CustomerEmail,
             Review = orderDTO.Review,
             RevenueId = revenueId,
+
         };
+
 
         db.Add(order);
         db.SaveChanges();
@@ -221,6 +233,25 @@ app.MapGet("/api/menuitems", async (WangazonDbContext db) =>
     return Results.Ok(menuItems);
 });
 
+app.MapPost("/api/order/menuitem/{orderId}", (WangazonDbContext db, int orderId, int[] itemIds) =>
+{
+    var order = db.Orders.SingleOrDefault(s => s.Id == orderId);
+    var items = db.MenuItems.Where(g => itemIds.Contains(g.Id)).ToList();
+
+    if (order.MenuItems == null)
+    {
+        order.MenuItems = new List<MenuItem>();
+    }
+
+    foreach (var item in items)
+    {
+        order.MenuItems.Add(item);
+    }
+
+    db.SaveChanges();
+    return order;
+});
+
 
 
 
@@ -275,7 +306,7 @@ app.MapGet("/api/revenue", async (WangazonDbContext db) =>
         var totalOrderAmountWithTip = r.Orders.Sum(o => o.CalculateTotalPrice());
         var paymentType = string.Join(", ", r.Orders.SelectMany(o => o.PaymentTypes.Select(pt => pt.Type)));
         var orderTypes = string.Join(", ", r.Orders.SelectMany(o => o.Type.Select(ot => ot.Type)));
-        var orderClosed = r.Orders.Max(o => o.OrderClosed.Value);
+        var orderClosed = r.Orders.Max(o => o.OrderClosed);
         var walkInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Walk In"));
         var callInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Call In"));
         var cashCount = r.Orders.Count(o => o.PaymentTypes.Any(pt => pt.Type == "Cash"));
@@ -318,7 +349,7 @@ app.MapGet("/api/revenue/{employeeId}", async (WangazonDbContext db, int employe
         var totalOrderAmountWithTip = r.Orders.Sum(o => o.CalculateTotalPrice());
         var paymentType = string.Join(", ", r.Orders.SelectMany(o => o.PaymentTypes.Select(pt => pt.Type)));
         var orderTypes = string.Join(", ", r.Orders.SelectMany(o => o.Type.Select(ot => ot.Type)));
-        var orderClosed = r.Orders.Max(o => o.OrderClosed.Value);
+        var orderClosed = r.Orders.Max(o => o.OrderClosed);
         var walkInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Walk In"));
         var callInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Call In"));
         var cashCount = r.Orders.Count(o => o.PaymentTypes.Any(pt => pt.Type == "Cash"));
@@ -343,7 +374,17 @@ app.MapGet("/api/revenue/{employeeId}", async (WangazonDbContext db, int employe
 });
 
 
+// Check if user exists
 
+app.MapGet("/api/checkuser/{uid}", (WangazonDbContext db, string uid) =>
+{
+    var userExists = db.Employees.Where(x => x.Uid == uid).FirstOrDefault();
+    if (userExists == null)
+    {
+        return Results.StatusCode(204);
+    }
+    return Results.Ok(userExists);
+});
 
 
 
