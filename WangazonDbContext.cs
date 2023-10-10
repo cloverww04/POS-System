@@ -11,6 +11,7 @@ namespace wangazon
         public DbSet<PaymentType>? PaymentTypes { get; set; }
         public DbSet<Revenue>? Revenues { get; set; }
 
+
         public WangazonDbContext(DbContextOptions<WangazonDbContext> context) : base(context) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

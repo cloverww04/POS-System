@@ -6,6 +6,19 @@ using wangazon.DTOs;
 using wangazon.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+//ADD CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000",
+                                "http://localhost:7253")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+        });
+});
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
@@ -22,6 +35,8 @@ builder.Services.Configure<JsonOptions>(options =>
 });
 
 var app = builder.Build();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -218,6 +233,50 @@ app.MapGet("/api/employees", async (WangazonDbContext db) =>
     return Results.Ok(employees);
 });
 
+app.MapGet("/api/employees/{empId}", async (WangazonDbContext db, int id) =>
+{
+    Employee emp = await db.Employees.FirstOrDefaultAsync(e => e.Id == id);
+
+    if (emp == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(emp);
+});
+
+app.MapPut("/api/employees/{empId}", async (WangazonDbContext db, int id, Employee emp) =>
+{
+    Employee empToUpdate = await db.Employees.FirstOrDefaultAsync(e => e.Id == id);
+
+    if (empToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+
+    empToUpdate.FirstName = emp.FirstName;
+    empToUpdate.LastName = emp.LastName;
+    empToUpdate.Email = emp.Email;
+    empToUpdate.Uid = emp.Uid;
+
+    db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+app.MapDelete("/api/employees/{empId}", async (WangazonDbContext db, int id) =>
+{
+    Employee emp = await db.Employees.FirstOrDefaultAsync(e => e.Id == id);
+
+    if (emp == null)
+    {
+        return Results.NotFound();
+    }
+
+    db.Remove(emp);
+    db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
 
 
 // Endpoints for Menu Items
@@ -233,6 +292,7 @@ app.MapGet("/api/menuitems", async (WangazonDbContext db) =>
     return Results.Ok(menuItems);
 });
 
+// add item to order
 app.MapPost("/api/order/menuitem/{orderId}", (WangazonDbContext db, int orderId, int[] itemIds) =>
 {
     var order = db.Orders.SingleOrDefault(s => s.Id == orderId);
@@ -252,6 +312,68 @@ app.MapPost("/api/order/menuitem/{orderId}", (WangazonDbContext db, int orderId,
     return order;
 });
 
+// delete item from order
+app.MapDelete("/api/order/menuitem/{orderId}/{itemId}", async (WangazonDbContext db, int orderId, int itemId) =>
+{
+    var order = await db.Orders.Include(o => o.MenuItems).FirstOrDefaultAsync(o => o.Id == orderId);
+
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+
+    if (order.MenuItems != null)
+    {
+        var menuItemToRemove = order.MenuItems.FirstOrDefault(mi => mi.Id == itemId);
+        if (menuItemToRemove == null)
+        {
+            return Results.NoContent();
+        }
+
+        order.MenuItems.Remove(menuItemToRemove);
+        await db.SaveChangesAsync();
+    }
+
+    return Results.NoContent();
+});
+
+
+
+
+
+// create menu item
+app.MapPost("/api/menuitem", (WangazonDbContext db, MenuItem item) =>
+{
+    try
+    {
+        db.Add(item);
+        db.SaveChanges();
+        return Results.Created($"/api/menuitem/{item.Id}", item);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex);
+    }
+});
+
+// edit menu item
+app.MapPut("/api/menuitem/{id}", async (WangazonDbContext db, int id, MenuItem item) =>
+{
+    var itemToUpdate = await db.MenuItems.FirstOrDefaultAsync(i => i.Id == id);
+    if (itemToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+
+    itemToUpdate.Description = item.Description;
+    itemToUpdate.ImageUrl = item.ImageUrl;
+    itemToUpdate.Price = item.Price;
+    itemToUpdate.Name = item.Name;
+
+    db.SaveChanges();
+    return Results.Ok(itemToUpdate);
+});
+
 
 
 
@@ -267,6 +389,43 @@ app.MapGet("/api/ordertypes", async (WangazonDbContext db) =>
 
     return Results.Ok(orderTypes);
 });
+
+app.MapPost("/api/order/ordertype/{orderId}", async (WangazonDbContext db, int orderId, int typeId) =>
+{
+    var order = await db.Orders
+        .Include(o => o.Type)
+        .FirstOrDefaultAsync(o => o.Id == orderId);
+
+    var orderType = await db.OrderTypes.FindAsync(typeId);
+
+    if (order == null || orderType == null)
+    {
+        return Results.NotFound();
+    }
+
+
+    if (order.Type == null)
+    {
+        order.Type = new List<OrderType>();
+    }
+
+    order.Type.Add(orderType);
+
+    try
+    {
+        db.Update(order);
+        await db.SaveChangesAsync();
+        return Results.Ok(order);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex);
+    }
+});
+
+
+
+
 
 
 
