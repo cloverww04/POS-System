@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using wangazon;
 using wangazon.DTOs;
+using wangazon.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,8 @@ app.MapGet("/api/orders", async (WangazonDbContext db) =>
 });
 
 
+
+
 app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
 {
     var orders = await db.Orders
@@ -83,6 +86,109 @@ app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
 
     return Results.Ok(ordersDTO);
 });
+
+app.MapPost("/api/orders", async (WangazonDbContext db, CreateOrderDTO orderDTO) =>
+{
+    var revenueId = await db.Revenues
+            .Where(r => r.EmployeeId == orderDTO.EmployeeId)
+            .Select(r => r.Id)
+            .FirstOrDefaultAsync();
+
+    if (revenueId == 0)
+    {
+        return Results.NotFound("No associated revenue found for the employee.");
+    }
+
+    try
+    {
+        var order = new Order
+        {
+            EmployeeId = orderDTO.EmployeeId,
+            OrderPlaced = DateTime.Now,
+            OrderClosed = null,
+            Tip = orderDTO.Tip,
+            CustomerFirstName = orderDTO.CustomerFirstName,
+            CustomerLastName = orderDTO.CustomerLastName,
+            CustomerPhone = orderDTO.CustomerPhone,
+            CustomerEmail = orderDTO.CustomerEmail,
+            Review = orderDTO.Review,
+            RevenueId = revenueId,
+        };
+
+        db.Add(order);
+        db.SaveChanges();
+        return Results.Created($"/api/orders/{order.Id}", order);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex);
+    }
+});
+
+app.MapPut("/api/orders/{id}", async (WangazonDbContext db, int id, CreateOrderDTO updatedOrderDTO) =>
+{
+    var order = await db.Orders.FindAsync(id);
+
+    var revenueId = await db.Revenues
+            .Where(r => r.EmployeeId == updatedOrderDTO.EmployeeId)
+            .Select(r => r.Id)
+            .FirstOrDefaultAsync();
+
+
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        order.EmployeeId = updatedOrderDTO.EmployeeId;
+        order.OrderPlaced = updatedOrderDTO.OrderPlaced;
+        order.OrderClosed = updatedOrderDTO.OrderClosed;
+        order.CustomerFirstName = updatedOrderDTO.CustomerFirstName;
+        order.CustomerLastName = updatedOrderDTO.CustomerLastName;
+        order.Tip = updatedOrderDTO.Tip;
+        order.CustomerPhone = updatedOrderDTO.CustomerPhone;
+        order.CustomerEmail = updatedOrderDTO.CustomerEmail;
+        order.Review = updatedOrderDTO.Review;
+        order.RevenueId = revenueId;
+
+        db.Update(order);
+        db.SaveChanges();
+
+        return Results.Ok(order);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex);
+    }
+});
+
+app.MapDelete("/api/orders/{id}", async (WangazonDbContext db, int id) =>
+{
+    var order = await db.Orders.FindAsync(id);
+
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        db.Remove(order);
+        db.SaveChanges();
+        return Results.NoContent();
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex);
+    }
+});
+
+
+
+
+
 
 
 

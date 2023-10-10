@@ -22,7 +22,6 @@
         public Order()
         {
             this.OrderPlaced = DateTime.Now;
-            this.OrderClosed = DateTime.Now;
         }
 
         public decimal CalculateTotalPrice()
