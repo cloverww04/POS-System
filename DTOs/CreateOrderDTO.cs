@@ -2,6 +2,7 @@
 {
     public class CreateOrderDTO
     {
+        public int Id { get; set; }
         public int EmployeeId { get; set; }
         public DateTime? OrderPlaced { get; set; }
         public DateTime? OrderClosed { get; set; }

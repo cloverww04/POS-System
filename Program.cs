@@ -136,6 +136,7 @@ app.MapPost("/api/orders", async (WangazonDbContext db, CreateOrderDTO orderDTO)
 
         var order = new Order
         {
+            Id = orderDTO.Id,
             EmployeeId = orderDTO.EmployeeId,
             OrderPlaced = DateTime.Now,
             OrderClosed = null,
@@ -416,7 +417,7 @@ app.MapGet("/api/ordertypes", async (WangazonDbContext db) =>
     return Results.Ok(orderTypes);
 });
 
-app.MapPost("/api/order/ordertype/{orderId}", async (WangazonDbContext db, int orderId, int typeId) =>
+app.MapPost("/api/order/ordertype/{orderId}/{typeId}", async (WangazonDbContext db, int orderId, int typeId) =>
 {
     var order = await db.Orders
         .Include(o => o.Type)
