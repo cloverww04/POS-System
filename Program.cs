@@ -58,6 +58,7 @@ app.MapGet("/api/orders", async (WangazonDbContext db) =>
 
     var ordersDTO = orders.Select(order => new OrderDTO
     {
+        Id = order.Id,
         OrderName = order.CustomerFirstName + " " + order.CustomerLastName,
         OrderStatus = order.OrderClosed.HasValue ? "Closed" : "Open",
         PhoneNumber = order.CustomerPhone,
@@ -81,7 +82,8 @@ app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
 {
     var order = await db.Orders
         .Include(o => o.Type)
-        .Include(o => o.MenuItems)
+        .Include(o => o.OrderMenuItems)
+        .ThenInclude(om => om.MenuItem)
         .Where(o => o.Id == id)
         .FirstOrDefaultAsync();
 
@@ -90,25 +92,31 @@ app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
         return Results.NotFound();
     }
 
-    decimal totalOrderAmount = order.MenuItems.Sum(item => item.Price);
+    decimal totalOrderAmount = order.OrderMenuItems
+        .Sum(orderItem => orderItem.Quantity * orderItem.MenuItem.Price);
 
     var orderDTO = new OrderDTO
     {
+        Id = order.Id,
         OrderName = order.CustomerFirstName + " " + order.CustomerLastName,
         OrderStatus = order.OrderClosed.HasValue ? "Closed" : "Open",
         PhoneNumber = order.CustomerPhone,
         EmailAddress = order.CustomerEmail,
         OrderType = order.Type?.FirstOrDefault()?.Type,
-        MenuItems = order.MenuItems.Select(item => new MenuItemDTO
+        MenuItems = order.OrderMenuItems.Select(orderItem => new MenuItemDTO
         {
-            ItemName = item.Name,
-            Price = item.Price
+            Id = orderItem.MenuItem.Id,
+            ItemName = orderItem.MenuItem.Name,
+            Price = orderItem.MenuItem.Price,
+            Quantity = orderItem.Quantity,
         }).ToList(),
-        TotalOrderAmount = totalOrderAmount
+        TotalOrderAmount = totalOrderAmount,
     };
 
     return Results.Ok(orderDTO);
 });
+
+
 
 
 app.MapPost("/api/orders", async (WangazonDbContext db, CreateOrderDTO orderDTO) =>
@@ -293,49 +301,67 @@ app.MapGet("/api/menuitems", async (WangazonDbContext db) =>
 });
 
 // add item to order
-app.MapPost("/api/order/menuitem/{orderId}", (WangazonDbContext db, int orderId, int[] itemIds) =>
+app.MapPost("/api/order/menuitem/{orderId}/{itemId}", (WangazonDbContext db, int orderId, int itemId) =>
 {
-    var order = db.Orders.SingleOrDefault(s => s.Id == orderId);
-    var items = db.MenuItems.Where(g => itemIds.Contains(g.Id)).ToList();
+    var orderItem = db.OrderMenuItems
+        .SingleOrDefault(oi => oi.OrderId == orderId && oi.MenuItemId == itemId);
 
-    if (order.MenuItems == null)
+    if (orderItem == null)
     {
-        order.MenuItems = new List<MenuItem>();
+
+        orderItem = new OrderMenuItem
+        {
+            OrderId = orderId,
+            MenuItemId = itemId,
+            Quantity = 1
+        };
+
+        db.OrderMenuItems.Add(orderItem);
     }
-
-    foreach (var item in items)
+    else
     {
-        order.MenuItems.Add(item);
+
+        orderItem.Quantity++;
     }
 
     db.SaveChanges();
-    return order;
+    return orderItem;
 });
+
 
 // delete item from order
 app.MapDelete("/api/order/menuitem/{orderId}/{itemId}", async (WangazonDbContext db, int orderId, int itemId) =>
 {
-    var order = await db.Orders.Include(o => o.MenuItems).FirstOrDefaultAsync(o => o.Id == orderId);
+    var order = await db.Orders
+        .Include(o => o.OrderMenuItems)
+        .FirstOrDefaultAsync(o => o.Id == orderId);
 
     if (order == null)
     {
         return Results.NotFound();
     }
 
-    if (order.MenuItems != null)
-    {
-        var menuItemToRemove = order.MenuItems.FirstOrDefault(mi => mi.Id == itemId);
-        if (menuItemToRemove == null)
-        {
-            return Results.NoContent();
-        }
+    var orderItem = order.OrderMenuItems.FirstOrDefault(oi => oi.MenuItemId == itemId);
 
-        order.MenuItems.Remove(menuItemToRemove);
-        await db.SaveChangesAsync();
+    if (orderItem == null)
+    {
+        return Results.NoContent();
     }
+
+    if (orderItem.Quantity <= 1)
+    {
+        db.OrderMenuItems.Remove(orderItem);
+    }
+    else
+    {
+        orderItem.Quantity--;
+    }
+
+    await db.SaveChangesAsync();
 
     return Results.NoContent();
 });
+
 
 
 

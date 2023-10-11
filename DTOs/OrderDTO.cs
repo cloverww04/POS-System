@@ -2,6 +2,7 @@
 {
     public class OrderDTO
     {
+        public int Id { get; set; }
         public string? OrderName { get; set; }
         public string? OrderStatus { get; set; }
         public string? PhoneNumber { get; set; }

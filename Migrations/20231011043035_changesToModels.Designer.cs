@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using wangazon;
@@ -11,9 +12,11 @@ using wangazon;
 namespace wangazon.Migrations
 {
     [DbContext(typeof(WangazonDbContext))]
-    partial class WangazonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231011043035_changesToModels")]
+    partial class changesToModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

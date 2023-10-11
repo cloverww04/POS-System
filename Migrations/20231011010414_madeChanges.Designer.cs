@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using wangazon;
@@ -11,9 +12,11 @@ using wangazon;
 namespace wangazon.Migrations
 {
     [DbContext(typeof(WangazonDbContext))]
-    partial class WangazonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231011010414_madeChanges")]
+    partial class madeChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -204,8 +207,8 @@ namespace wangazon.Migrations
                             CustomerLastName = "Doe",
                             CustomerPhone = "555-123-4567",
                             EmployeeId = 1,
-                            OrderClosed = new DateTime(2023, 10, 10, 23, 0, 34, 973, DateTimeKind.Local).AddTicks(9846),
-                            OrderPlaced = new DateTime(2023, 10, 10, 21, 30, 34, 973, DateTimeKind.Local).AddTicks(9843),
+                            OrderClosed = new DateTime(2023, 10, 10, 19, 34, 14, 137, DateTimeKind.Local).AddTicks(4478),
+                            OrderPlaced = new DateTime(2023, 10, 10, 18, 4, 14, 137, DateTimeKind.Local).AddTicks(4474),
                             Review = "Great service!",
                             Tip = 2.00m
                         },
@@ -217,37 +220,11 @@ namespace wangazon.Migrations
                             CustomerLastName = "Dole",
                             CustomerPhone = "555-231-1267",
                             EmployeeId = 1,
-                            OrderClosed = new DateTime(2023, 10, 10, 23, 0, 34, 973, DateTimeKind.Local).AddTicks(9851),
-                            OrderPlaced = new DateTime(2023, 10, 10, 21, 30, 34, 973, DateTimeKind.Local).AddTicks(9850),
+                            OrderClosed = new DateTime(2023, 10, 10, 19, 34, 14, 137, DateTimeKind.Local).AddTicks(4483),
+                            OrderPlaced = new DateTime(2023, 10, 10, 18, 4, 14, 137, DateTimeKind.Local).AddTicks(4482),
                             Review = "It was ok",
                             Tip = 5.00m
                         });
-                });
-
-            modelBuilder.Entity("wangazon.Models.OrderMenuItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("MenuItemId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MenuItemId");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("OrderMenuItems");
                 });
 
             modelBuilder.Entity("wangazon.Models.OrderType", b =>
@@ -386,23 +363,6 @@ namespace wangazon.Migrations
                     b.Navigation("Revenue");
                 });
 
-            modelBuilder.Entity("wangazon.Models.OrderMenuItem", b =>
-                {
-                    b.HasOne("wangazon.Models.MenuItem", "MenuItem")
-                        .WithMany()
-                        .HasForeignKey("MenuItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("wangazon.Models.Order", null)
-                        .WithMany("OrderMenuItems")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("MenuItem");
-                });
-
             modelBuilder.Entity("wangazon.Models.Revenue", b =>
                 {
                     b.HasOne("wangazon.Models.Employee", "Employee")
@@ -419,11 +379,6 @@ namespace wangazon.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Revenues");
-                });
-
-            modelBuilder.Entity("wangazon.Models.Order", b =>
-                {
-                    b.Navigation("OrderMenuItems");
                 });
 
             modelBuilder.Entity("wangazon.Models.Revenue", b =>

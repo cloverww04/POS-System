@@ -16,6 +16,7 @@
         public ICollection<OrderType>? Type { get; set; }
         public ICollection<PaymentType>? PaymentTypes { get; set; }
         public ICollection<MenuItem>? MenuItems { get; set; }
+        public ICollection<OrderMenuItem>? OrderMenuItems { get; set; }
         public int? RevenueId { get; set; }
         public Revenue? Revenue { get; set; }
 
