@@ -178,7 +178,6 @@ app.MapPut("/api/orders/{id}", async (WangazonDbContext db, int id, CreateOrderD
 
     try
     {
-        order.EmployeeId = updatedOrderDTO.EmployeeId;
         order.OrderPlaced = updatedOrderDTO.OrderPlaced;
         order.OrderClosed = updatedOrderDTO.OrderClosed;
         order.CustomerFirstName = updatedOrderDTO.CustomerFirstName;
@@ -187,7 +186,6 @@ app.MapPut("/api/orders/{id}", async (WangazonDbContext db, int id, CreateOrderD
         order.CustomerPhone = updatedOrderDTO.CustomerPhone;
         order.CustomerEmail = updatedOrderDTO.CustomerEmail;
         order.Review = updatedOrderDTO.Review;
-        order.RevenueId = revenueId;
 
         db.Update(order);
         db.SaveChanges();
@@ -450,10 +448,38 @@ app.MapPost("/api/order/ordertype/{orderId}/{typeId}", async (WangazonDbContext 
     }
 });
 
+app.MapPut("/api/order/ordertype/{orderId}/{typeId}", async (WangazonDbContext db, int orderId, int typeId) =>
+{
+    var order = await db.Orders
+        .Include(o => o.Type)
+        .FirstOrDefaultAsync(o => o.Id == orderId);
 
+    var orderType = await db.OrderTypes.FindAsync(typeId);
 
+    if (order == null || orderType == null)
+    {
+        return Results.NotFound();
+    }
 
+    if (order.Type == null)
+    {
+        order.Type = new List<OrderType>();
+    }
 
+    order.Type.Clear();
+    order.Type.Add(orderType);
+
+    try
+    {
+        db.Update(order);
+        await db.SaveChangesAsync();
+        return Results.Ok(order);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex);
+    }
+});
 
 
 
