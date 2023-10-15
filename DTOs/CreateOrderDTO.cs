@@ -1,4 +1,6 @@
-﻿namespace wangazon.DTOs
+﻿using wangazon.Models;
+
+namespace wangazon.DTOs
 {
     public class CreateOrderDTO
     {
@@ -12,5 +14,7 @@
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
         public string? Review { get; set; }
+        public string? Comment { get; set; }
+        public List<OrderMenuItem>? OrderMenuItems { get; set; }
     }
 }

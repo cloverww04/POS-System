@@ -12,8 +12,8 @@ using wangazon;
 namespace wangazon.Migrations
 {
     [DbContext(typeof(WangazonDbContext))]
-    [Migration("20231011043035_changesToModels")]
-    partial class changesToModels
+    [Migration("20231015094848_includeCommentToOrderItem")]
+    partial class includeCommentToOrderItem
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -207,8 +207,8 @@ namespace wangazon.Migrations
                             CustomerLastName = "Doe",
                             CustomerPhone = "555-123-4567",
                             EmployeeId = 1,
-                            OrderClosed = new DateTime(2023, 10, 10, 23, 0, 34, 973, DateTimeKind.Local).AddTicks(9846),
-                            OrderPlaced = new DateTime(2023, 10, 10, 21, 30, 34, 973, DateTimeKind.Local).AddTicks(9843),
+                            OrderClosed = new DateTime(2023, 10, 15, 4, 18, 48, 66, DateTimeKind.Local).AddTicks(4715),
+                            OrderPlaced = new DateTime(2023, 10, 15, 2, 48, 48, 66, DateTimeKind.Local).AddTicks(4712),
                             Review = "Great service!",
                             Tip = 2.00m
                         },
@@ -220,8 +220,8 @@ namespace wangazon.Migrations
                             CustomerLastName = "Dole",
                             CustomerPhone = "555-231-1267",
                             EmployeeId = 1,
-                            OrderClosed = new DateTime(2023, 10, 10, 23, 0, 34, 973, DateTimeKind.Local).AddTicks(9851),
-                            OrderPlaced = new DateTime(2023, 10, 10, 21, 30, 34, 973, DateTimeKind.Local).AddTicks(9850),
+                            OrderClosed = new DateTime(2023, 10, 15, 4, 18, 48, 66, DateTimeKind.Local).AddTicks(4721),
+                            OrderPlaced = new DateTime(2023, 10, 15, 2, 48, 48, 66, DateTimeKind.Local).AddTicks(4719),
                             Review = "It was ok",
                             Tip = 5.00m
                         });
@@ -234,6 +234,9 @@ namespace wangazon.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
 
                     b.Property<int>("MenuItemId")
                         .HasColumnType("integer");

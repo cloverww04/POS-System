@@ -109,6 +109,7 @@ app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
             ItemName = orderItem.MenuItem.Name,
             Price = orderItem.MenuItem.Price,
             Quantity = orderItem.Quantity,
+            Comment = orderItem.Comment,
         }).ToList(),
         TotalOrderAmount = totalOrderAmount,
     };
@@ -299,6 +300,18 @@ app.MapGet("/api/menuitems", async (WangazonDbContext db) =>
     return Results.Ok(menuItems);
 });
 
+app.MapGet("/api/menuitem/{id}", async (WangazonDbContext db, int id) =>
+{
+    var menuItem = await db.MenuItems.FirstOrDefaultAsync(i => i.Id == id);
+
+    if (menuItem == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(menuItem);
+});
+
 // add item to order
 app.MapPost("/api/order/menuitem/{orderId}/{itemId}", (WangazonDbContext db, int orderId, int itemId) =>
 {
@@ -326,6 +339,30 @@ app.MapPost("/api/order/menuitem/{orderId}/{itemId}", (WangazonDbContext db, int
     db.SaveChanges();
     return orderItem;
 });
+
+app.MapPut("/api/order/menuitem/{orderId}/{itemId}", (WangazonDbContext db, int orderId, int itemId, MenuItemDTO updatedMenuItem) =>
+{
+    var orderItem = db.OrderMenuItems
+        .SingleOrDefault(oi => oi.OrderId == orderId && oi.MenuItemId == itemId);
+
+    if (orderItem == null)
+    {
+        return Results.NotFound("Order menu item not found.");
+    }
+
+    orderItem.Comment = updatedMenuItem.Comment;
+
+    try
+    {
+        db.SaveChanges();
+        return Results.Ok(orderItem);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex);
+    }
+});
+
 
 
 // delete item from order
@@ -497,6 +534,41 @@ app.MapGet("/api/payment", async (WangazonDbContext db) =>
     return Results.Ok(paymentTypes);
 });
 
+app.MapPost("/api/orders/{orderId}/payment", async (WangazonDbContext db, int orderId, PaymentDTO confirmPaymentDTO) =>
+{
+    var order = await db.Orders
+        .Include(o => o.PaymentTypes)
+        .FirstOrDefaultAsync(o => o.Id == orderId);
+
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+
+        var paymentType = await db.PaymentTypes.FirstOrDefaultAsync(pt => pt.Type == confirmPaymentDTO.PaymentType);
+
+        if (paymentType == null)
+        {
+            return Results.BadRequest("Invalid payment type");
+        }
+
+        order.Tip = confirmPaymentDTO.Tip;
+        order.PaymentTypes.Add(paymentType);
+        order.OrderClosed = DateTime.Now;
+
+        db.Update(order);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(order);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+});
 
 
 
