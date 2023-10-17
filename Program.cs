@@ -112,6 +112,8 @@ app.MapGet("/api/orders/{id}", async (WangazonDbContext db, int id) =>
             Comment = orderItem.Comment,
         }).ToList(),
         TotalOrderAmount = totalOrderAmount,
+        Tip = order.Tip,
+        Review = order.Review,
     };
 
     return Results.Ok(orderDTO);
@@ -633,6 +635,7 @@ app.MapGet("/api/revenue/{employeeId}", async (WangazonDbContext db, int employe
         var totalOrderAmountWithTip = r.Orders.Sum(o => o.CalculateTotalPrice());
         var paymentType = string.Join(", ", r.Orders.SelectMany(o => o.PaymentTypes.Select(pt => pt.Type)));
         var orderTypes = string.Join(", ", r.Orders.SelectMany(o => o.Type.Select(ot => ot.Type)));
+        var orderPlaced = r.Orders.Min(o => o.OrderPlaced);
         var orderClosed = r.Orders.Max(o => o.OrderClosed);
         var walkInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Walk In"));
         var callInCount = r.Orders.Count(o => o.Type.Any(ot => ot.Type == "Call In"));
@@ -646,6 +649,7 @@ app.MapGet("/api/revenue/{employeeId}", async (WangazonDbContext db, int employe
             TotalOrderAmountWithTip = totalOrderAmountWithTip,
             PaymentType = paymentType,
             OrderTypes = orderTypes,
+            OrderCreated = orderPlaced,
             OrderClosed = orderClosed,
             WalkInCount = walkInCount,
             CallInCount = callInCount,
@@ -656,6 +660,23 @@ app.MapGet("/api/revenue/{employeeId}", async (WangazonDbContext db, int employe
 
     return Results.Ok(revenueDTOList);
 });
+
+// leave a review
+app.MapPost("/api/orders/{orderId}/reviews", async (WangazonDbContext db, int orderId, ReviewDTO reviewDTO) =>
+{
+    var order = await db.Orders.FindAsync(orderId);
+
+    if (order == null)
+    {
+        return Results.NotFound();
+    }
+
+    order.Review = reviewDTO.Review;
+    db.Update(order);
+    db.SaveChanges();
+    return Results.Ok(order);
+});
+
 
 
 // Check if user exists

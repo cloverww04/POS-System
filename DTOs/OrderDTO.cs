@@ -11,5 +11,7 @@
         public string? Comment { get; set; }
         public List<MenuItemDTO>? MenuItems { get; set; }
         public decimal TotalOrderAmount { get; set; }
+        public string? Review { get; set; }
+        public decimal Tip { get; set; }
     }
 }
